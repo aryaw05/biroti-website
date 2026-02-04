@@ -141,3 +141,15 @@
         @apply text-foreground;
     }
 }
+
+.bn-editor {
+    height: 100%;
+    padding: 10px;
+}
+
+.bn-container {
+    height: 100vh;
+}
+.bn-side-menu {
+    color: white;
+}
