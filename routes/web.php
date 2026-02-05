@@ -13,7 +13,6 @@ Route::get('/', function () {
 
 Route::get('/articles', [BlogController::class, 'index'])
     ->name('articles.index');
-
 Route::get('/articles/{id}', [BlogController::class, 'show'])
     ->name('articles.show');
 Route::get('/events', [EventController::class, 'index'])

@@ -9,10 +9,6 @@ use Inertia\Inertia;
 
 class EventController extends Controller
 {
-    /**
-     * Menampilkan daftar event
-     * File frontend: resources/js/pages/event/all-events.tsx
-     */
     public function index()
     {
         $events = Event::with('user:id,name')

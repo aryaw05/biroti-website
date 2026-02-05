@@ -53,10 +53,7 @@ class BlogController extends Controller
         ]);
     }
 
-    /**
-     * Halaman tulis / edit artikel (admin)
-     * Frontend: resources/js/pages/article/admin/write-article.tsx
-     */
+
     public function create()
     {
         return Inertia::render('article/admin/write-article');
