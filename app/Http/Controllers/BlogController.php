@@ -4,118 +4,116 @@ namespace App\Http\Controllers;
 
 use App\Models\Blog;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
 
 class BlogController extends Controller
 {
+    /**
+     * Menampilkan semua artikel
+     * Frontend: resources/js/pages/article/all-article.tsx
+     */
     public function index()
     {
-        $blog = Blog::with('user:id,name')->get();
-        return response()->json([
-            'success' => true,
-            'message' => 'Blogs retrieved successfully',
-            'data' => $blog->map(function($b) {
+        $blogs = Blog::with('user:id,name')
+            ->latest()
+            ->get()
+            ->map(function ($b) {
                 return [
-                    'id_blog' => $b->id_blog,
-                    'judul' => $b->judul,
-                    'konten' => $b->konten,
-                    'tanggal' => $b->tanggal,
+                    'id_blog'   => $b->id_blog,
+                    'judul'     => $b->judul,
+                    'tanggal'   => $b->tanggal,
                     'thumbnail' => $b->thumbnail,
-                    'id_user' => $b->id_user,
-                    'author' => $b->user->name
+                    'author'    => $b->user?->name,
                 ];
-            })
-        ], 200);
+            });
+
+        return Inertia::render('article/all-article', [
+            'articles' => $blogs
+        ]);
     }
 
-    public function show($id)
+    /**
+     * Detail artikel
+     * Frontend: resources/js/pages/article/detail-article.tsx
+     */
+    public function show(string $id)
     {
-        $blog = Blog::with('user:id,name')->find($id);
+        $blog = Blog::with('user:id,name')->findOrFail($id);
 
-        if (!$blog) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Blog not found',
-                'data' => (object)[]
-            ], 404);
-        }
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Blog retrieved successfully',
-            'data' => [
-                'id_blog' => $blog->id_blog,
-                'judul' => $blog->judul,
-                'konten' => $blog->konten,
-                'tanggal' => $blog->tanggal,
+        return Inertia::render('article/detail-article', [
+            'article' => [
+                'id_blog'   => $blog->id_blog,
+                'judul'     => $blog->judul,
+                'konten'    => $blog->konten,
+                'tanggal'   => $blog->tanggal,
                 'thumbnail' => $blog->thumbnail,
-                'id_user' => $blog->id_user,
-                'author' => $blog->user->name
+                'author'    => $blog->user?->name,
             ]
-        ], 200);
+        ]);
     }
 
+    /**
+     * Halaman tulis / edit artikel (admin)
+     * Frontend: resources/js/pages/article/admin/write-article.tsx
+     */
+    public function create()
+    {
+        return Inertia::render('article/admin/write-article');
+    }
+
+    /**
+     * Simpan artikel baru
+     */
     public function store(Request $request)
     {
-        $request->validate([
-            'judul' => 'required|string|max:255',
-            'konten' => 'required',
-            'thumbnail' => 'nullable|string'
+        $validated = $request->validate([
+            'judul'     => 'required|string|max:255',
+            'konten'    => 'required',
+            'thumbnail' => 'nullable|string',
         ]);
 
-        $blog = Blog::create([
-            'judul' => $request->judul,
-            'konten' => $request->konten,
+        Blog::create([
+            ...$validated,
             'tanggal' => now()->toDateString(),
-            'thumbnail' => $request->thumbnail,
-            'id_user' => auth()->id()
+            'id_user' => Auth::id(),
         ]);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Blog created successfully',
-            'data' => $blog
-        ], 201);
+        return redirect()
+            ->route('blogs.index')
+            ->with('success', 'Artikel berhasil dibuat');
     }
 
-    public function update(Request $request, $id)
+    /**
+     * Update artikel
+     */
+    public function update(Request $request, string $id)
     {
-        $blog = Blog::find($id);
+        $blog = Blog::findOrFail($id);
 
-        if (!$blog) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Blog not found',
-                'data' => (object)[]
-            ], 404);
-        }
+        $validated = $request->validate([
+            'judul'     => 'required|string|max:255',
+            'konten'    => 'required',
+            'thumbnail' => 'nullable|string',
+        ]);
 
-        $blog->update($request->only(['judul','konten','thumbnail']));
+        $blog->update($validated);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Blog updated successfully',
-            'data' => $blog
-        ], 200);
+        return redirect()
+            ->back()
+            ->with('success', 'Artikel berhasil diperbarui');
     }
 
-    public function destroy($id)
+    /**
+     * Hapus artikel
+     */
+    public function destroy(string $id)
     {
-        $blog = Blog::find($id);
-
-        if (!$blog) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Blog not found',
-                'data' => (object)[]
-            ], 404);
-        }
-
+        $blog = Blog::findOrFail($id);
         $blog->delete();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Blog deleted successfully',
-            'data' => (object)[]
-        ], 200);
+        return redirect()
+            ->route('blogs.index')
+            ->with('success', 'Artikel berhasil dihapus');
     }
 }
