@@ -5,150 +5,108 @@ namespace App\Http\Controllers;
 use App\Models\Event;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
 
 class EventController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        $events = Event::with('user:id,name')->get();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Events retrieved successfully',
-            'data' => $events->map(function ($e) {
+        $events = Event::with('user:id,name')
+            ->latest()
+            ->get()
+            ->map(function ($e) {
                 return [
-                    'id_event'   => $e->id_event,
-                    'nama_event' => $e->nama_event,
-                    'deskripsi'  => $e->deskripsi,
-                    'tanggal_event' => $e->tanggal_event,
-                    'thumbnail'  => $e->thumbnail,
-                    'link'  => $e->link,
-                    'id_user'    => $e->id_user,
-                    'author'     => $e->user->name,
+                    'id_event'       => $e->id_event,
+                    'nama_event'     => $e->nama_event,
+                    'deskripsi'      => $e->deskripsi,
+                    'tanggal_event'  => $e->tanggal_event,
+                    'thumbnail'      => $e->thumbnail,
+                    'link'           => $e->link,
+                    'author'         => $e->user?->name,
                 ];
-            })
-        ], 200);
+            });
+
+        return Inertia::render('event/all-events', [
+            'events' => $events
+        ]);
     }
 
     /**
-     * Show the form for creating a new resource.
-     */
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        $request->validate([
-            'nama_event' => 'required|string|max:255',
-            'deskripsi'  => 'required',
-            'tanggal_event' => 'required|date',
-            'thumbnail'  => 'nullable|string',
-            'link'  => 'nullable|url',
-        ]);
-
-        $event = Event::create([
-            'nama_event' => $request->nama_event,
-            'deskripsi'  => $request->deskripsi,
-            'tanggal_event' => $request->tanggal_event,
-            'thumbnail'  => $request->thumbnail,
-            'link'  => $request->link,
-            'id_user'    => Auth::id()
-        ]);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Event created successfully',
-            'data'    => $event
-        ], 201);
-    }
-
-    /**
-     * Display the specified resource.
+     * Menampilkan detail event
+     * File frontend: resources/js/pages/event/detail-event.tsx
      */
     public function show(string $id)
     {
-        $event = Event::with('user:id,name')->find($id);
+        $event = Event::with('user:id,name')->findOrFail($id);
 
-        if (!$event) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Event not found',
-                'data'    => (object)[]
-            ], 404);
-        }
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Event retrieved successfully',
-            'data' => [
-                'id_event'   => $event->id_event,
-                'nama_event' => $event->nama_event,
-                'deskripsi'  => $event->deskripsi,
-                'tanggal_event' => $event->tanggal_event,
-                'thumbnail'  => $event->thumbnail,
-                'link'  => $event->link,
-                'id_user'    => $event->id_user,
-                'author'     => $event->user->name,
+        return Inertia::render('event/detail-event', [
+            'event' => [
+                'id_event'       => $event->id_event,
+                'nama_event'     => $event->nama_event,
+                'deskripsi'      => $event->deskripsi,
+                'tanggal_event'  => $event->tanggal_event,
+                'thumbnail'      => $event->thumbnail,
+                'link'           => $event->link,
+                'author'         => $event->user?->name,
             ]
-        ], 200);
+        ]);
     }
 
     /**
-     * Show the form for editing the specified resource.
+     * Simpan event baru (biasanya dari admin)
      */
-    public function edit(string $id)
+    public function store(Request $request)
     {
-        // 
+        $validated = $request->validate([
+            'nama_event'     => 'required|string|max:255',
+            'deskripsi'      => 'required',
+            'tanggal_event'  => 'required|date',
+            'thumbnail'      => 'nullable|string',
+            'link'           => 'nullable|url',
+        ]);
+
+        Event::create([
+            ...$validated,
+            'id_user' => Auth::id(),
+        ]);
+
+        return redirect()
+            ->route('events.index')
+            ->with('success', 'Event berhasil dibuat');
     }
 
     /**
-     * Update the specified resource in storage.
+     * Update event
      */
     public function update(Request $request, string $id)
     {
-        $event = Event::find($id);
+        $event = Event::findOrFail($id);
 
-        if (!$event) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Event not found',
-                'data'    => (object)[]
-            ], 404);
-        }
+        $validated = $request->validate([
+            'nama_event'     => 'required|string|max:255',
+            'deskripsi'      => 'required',
+            'tanggal_event'  => 'required|date',
+            'thumbnail'      => 'nullable|string',
+            'link'           => 'nullable|url',
+        ]);
 
-        $event->update($request->only(['nama_event','deskripsi','tanggal_event','thumbnail','link']));
+        $event->update($validated);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Event updated successfully',
-            'data'    => $event
-        ], 200);
+        return redirect()
+            ->back()
+            ->with('success', 'Event berhasil diperbarui');
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Hapus event
      */
     public function destroy(string $id)
     {
-        $event = Event::find($id);
-
-        if (!$event) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Event not found',
-                'data'    => (object)[]
-            ], 404);
-        }
-
+        $event = Event::findOrFail($id);
         $event->delete();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Event deleted successfully',
-            'data'    => (object)[]
-        ], 200);
+        return redirect()
+            ->route('events.index')
+            ->with('success', 'Event berhasil dihapus');
     }
 }
