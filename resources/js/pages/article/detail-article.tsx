@@ -1,41 +1,47 @@
-import { Content } from '@/components/template/article/detail-page/content';
 import { Header } from '@/components/template/article/detail-page/header';
 import ArticleLayout from '@/layouts/article/article-layout';
+import { BlockRenderer } from '@/components/template/block-renderer';
+import heroImage from '@/assets/images/hero-image.webp';
+import { usePage } from '@inertiajs/react';
 
-const blogData = {
-    category: 'Company',
-    title: 'The Best Way to Write a Recurring Email Newsletter',
-    author: {
-        name: 'Admin Biro TI',
-        avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-    },
-    publishedDate: 'Nov 24, 2023',
-    content: [
-        'You cannot avoid the importance of the first outreach email for increasing your sales in the email campaign. But how can you move out from the crowd and evoke a meaningful and personalized response?',
-        'Personalizing the emails for prospects and clients can get you the results you want from your email marketing strategy. As a result, you can engage prospects and drive them toward action, leading to a successful lead prospecting strategy in your sales outreach emails.',
-        'Although you cannot personalize every email with great accuracy, you can add a few elements that are enough to spark interest.',
-        'To get you in the right direction, here is the complete guide to email personalization for sales outreach that will help you create more engaging and effective email campaigns.',
-        'The key to successful email marketing lies in understanding your audience deeply and crafting messages that resonate with their specific needs, challenges, and goals. This approach not only improves open rates but also builds stronger relationships with your prospects.',
-    ],
-};
+interface ArticleProps {
+    article: {
+        id_blog: number;
+        judul: string;
+        konten: string;
+        tanggal: string;
+        thumbnail: string | null;
+        author: string | null;
+    };
+}
 
-export default function DetailArticlePage() {
+export default function DetailArticlePage({ article }: ArticleProps) {
     return (
         <ArticleLayout>
             <div className="min-h-screen bg-background py-28">
                 <div className="mx-auto max-w-4xl px-6">
                     <Header
-                        category={blogData.category}
-                        title={blogData.title}
-                        author={blogData.author}
-                        publishedDate={blogData.publishedDate}
+                        category="Article"
+                        title={article.judul}
+                        author={{ name: article.author || 'Admin', avatar: '' }}
+                        publishedDate={article.tanggal}
                     />
 
                     <div className="mt-16">
-                        <Content
-                            content={blogData.content}
-                            coverImage="/hero-image.webp"
-                        />
+                        {article.thumbnail && (
+                            <div className="aspect-video w-full overflow-hidden rounded-xl bg-muted mb-8">
+                                <img
+                                    src={article.thumbnail}
+                                    alt="Cover Image"
+                                    className="h-full w-full object-cover"
+                                    width={800}
+                                    height={450}
+                                />
+                            </div>
+                        )}
+                        <div className="article-content max-w-none">
+                            <BlockRenderer blocks={JSON.parse(article.konten || '[]')} />
+                        </div>
                     </div>
                 </div>
             </div>

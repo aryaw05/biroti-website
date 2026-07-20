@@ -13,23 +13,26 @@ import '../../../../css/app.css';
 type EditorProps = {
     editable: boolean;
     onSetBlocks?: (blocks: Block[]) => void;
+    initialContent?: string;
 };
 
 // Our <Editor> component we can reuse later
-export default function Editor({ editable, onSetBlocks }: EditorProps) {
+export default function Editor({ editable, onSetBlocks, initialContent }: EditorProps) {
     const { appearance } = useAppearance();
 
     const { audio, file, ...remainingBlockSpecs } = defaultBlockSpecs;
 
     const schema = BlockNoteSchema.create({
         blockSpecs: {
-            // remainingBlockSpecs contains all the other blocks
             ...remainingBlockSpecs,
         },
     });
 
+    const parsedContent = initialContent ? JSON.parse(initialContent) : undefined;
+
     const editor = BlockNoteEditor.create({
         schema,
+        initialContent: parsedContent,
     });
 
     return (
@@ -38,7 +41,9 @@ export default function Editor({ editable, onSetBlocks }: EditorProps) {
             editable={editable}
             theme={appearance === 'dark' ? 'dark' : 'light'}
             onChange={() => {
-                onSetBlocks(editor.document);
+                if (onSetBlocks) {
+                    onSetBlocks(editor.document);
+                }
             }}
         />
     );

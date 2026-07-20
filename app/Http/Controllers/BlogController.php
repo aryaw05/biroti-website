@@ -22,6 +22,7 @@ class BlogController extends Controller
                 return [
                     'id_blog'   => $b->id_blog,
                     'judul'     => $b->judul,
+                    'slug'      => $b->slug,
                     'tanggal'   => $b->tanggal,
                     'thumbnail' => $b->thumbnail,
                     'author'    => $b->user?->name,
@@ -37,9 +38,9 @@ class BlogController extends Controller
      * Detail artikel
      * Frontend: resources/js/pages/article/detail-article.tsx
      */
-    public function show(string $id)
+    public function show(string $slug)
     {
-        $blog = Blog::with('user:id,name')->findOrFail($id);
+        $blog = Blog::with('user:id,name')->where('slug', $slug)->firstOrFail();
 
         return Inertia::render('article/detail-article', [
             'article' => [
@@ -57,6 +58,20 @@ class BlogController extends Controller
     public function create()
     {
         return Inertia::render('article/admin/write-article');
+    }
+
+    public function edit(string $id)
+    {
+        $blog = Blog::findOrFail($id);
+
+        return Inertia::render('article/admin/edit-article', [
+            'article' => [
+                'id_blog'   => $blog->id_blog,
+                'judul'     => $blog->judul,
+                'konten'    => $blog->konten,
+                'thumbnail' => $blog->thumbnail,
+            ]
+        ]);
     }
 
     /**

@@ -17,12 +17,18 @@ import {
     LayoutGrid,
     Newspaper,
     Pencil,
+    PieChart,
     SquarePen,
 } from 'lucide-react';
 import AppLogo from '../../app-logo';
 import { NavArticle } from './nav-article';
 
 const mainNavItems: NavItem[] = [
+    {
+        title: 'Overview',
+        href: dashboard(),
+        icon: PieChart,
+    },
     {
         title: 'Events',
         href: dashboard(),
@@ -37,8 +43,8 @@ const mainNavItems: NavItem[] = [
 
 const articleNavItems: NavItem[] = [
     {
-        title: 'Write Article',
-        href: dashboard(),
+        title: 'Create Blog',
+        href: '/dashboard/article/create',
         icon: Pencil,
     },
     {
